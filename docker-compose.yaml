@@ -1,0 +1,21 @@
+version: "3.2"
+
+services:
+  api-backend:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.rest
+
+  rabbitmq:
+    image: rabbitmq:3.10.0-rc.3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: Riven
+      RABBITMQ_DEFAULT_PASS: testpassword
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
+  redis:
+    image: redis:6.2.6-alpine
+    ports:
+      - "6379:6379"
