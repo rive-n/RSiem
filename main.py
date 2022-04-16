@@ -20,8 +20,11 @@ app.include_router(dramatiq_router)
 @app.on_event("startup")
 async def start_app():
     dramatiq_router.custom_messages = create_tasks()
-    if environ.get("DEBUG"):
+    if environ.get("DEBUG", True):
         print(f"[+] Docker router got messages: {dramatiq_router.custom_messages}")
+        docker_router.abs_path = "/Users/d.saschenko/PycharmProjects/diplomSiem/internal/Services"
+    else:
+        docker_router.abs_path = environ.get("ROOT_PATH")
 
 
 @app.api_route("/health", methods=["GET"])
