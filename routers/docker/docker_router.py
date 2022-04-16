@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, UploadFile, Request
 from typing import Optional, List
 from internal.Enums import StatusCodes
-from routers.docker.models import FileModel
 import docker
 from os import listdir, path, environ, mkdir
+from on_startup import create_specific_task
 
 
 router = APIRouter(
@@ -37,19 +37,26 @@ async def get_docker_info_by_id(container_id: str, logs: bool = True):
 
 
 @router.api_route("/create_service/{service_name}", methods=['POST'])
-async def create_new_docker_container(request: Request, files: List[UploadFile], service_name):
-    # TODO: validator or middleware
-    # TODO: refactor
-    if not request.headers.get("Content-type") and (request.headers["Content-type"] != "application/json" or
-                                                    request.headers['Content-type'] != "multipart/form-data"):
-        raise HTTPException(status_code=415, detail="Bad content type")
-    if environ.get("DEBUG", True):
-        abc_path = "/Users/d.saschenko/PycharmProjects/diplomSiem/internal/Services"
-    else:
-        abc_path = environ.get("ROOT_PATH")
-    if service_name not in listdir(abc_path): mkdir(abc_path)
-    abc_path = path.join(abc_path, service_name)
+async def create_new_docker_container(files: List[UploadFile], service_name):
+    if service_name not in listdir(router.abs_path):
+        mkdir(path.join(router.abs_path, service_name))
+    abc_path = path.join(router.abs_path, service_name)
     for file in files:
         with open(path.join(abc_path, file.filename), "wb") as stream:
             stream.write(await file.read())
-    return {"status": StatusCodes.OK, "message": StatusCodes(200).value, "data": "Files created successfully"}
+    message = create_specific_task(abc_path)
+    return {"status": StatusCodes.OK, "message": StatusCodes(200).value, "data": "Files created successfully", **message}
+
+
+@router.api_route("/create_templates/{service_name}", methods=["POST"])
+async def create_templates(service_name: str, files: List[UploadFile]):
+    if service_name not in listdir(router.abs_path):
+        raise HTTPException(status_code=415, detail="No service found. To create service visit: "
+                                                    "/create_service/{name}".format(name=service_name))
+    abs_service_path = path.join(router.abs_path, service_name, "templates")
+    if not path.exists(abs_service_path):
+        mkdir(abs_service_path)
+    for file in files:
+        with open(path.join(abs_service_path, file.filename), "wb") as stream:
+            stream.write(await file.read())
+    return {"status": StatusCodes.OK, "message": StatusCodes(200).value, "data": "Files uploaded successfully"}
