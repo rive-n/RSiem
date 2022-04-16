@@ -54,7 +54,7 @@ def create_tasks():
     if environ.get("SERVICES_DIR"):
         dir = environ["SERVICES_DIR"]
     else:
-        dir = "internal/Services"
+        dir = "/Users/d.saschenko/PycharmProjects/diplomSiem/internal/Services"
 
     for module in filter(path.isdir, scandir(
             path.join(getcwd(), dir))):
@@ -64,6 +64,32 @@ def create_tasks():
     if objects:
         messages = {}
         for obj in objects:
+            messages[obj.service_name] = {"build_logs": "", "run_logs": ""}
+            message = build_docker_instance.send_with_options(
+                kwargs=obj.__dict__,
+                on_failure=print_error,
+                on_success=print_result
+            )
+            messages[obj.service_name]["build_logs"] = message.message_id
+            message = run_docker_instance.send_with_options(
+                kwargs=obj.__dict__,
+                on_failure=print_error,
+                on_success=print_result
+            )
+            messages[obj.service_name]["run_logs"] = message.message_id
+        return messages
+    else:
+        raise ValueError("Nothing found, please check rights or create files.")
+
+
+def create_specific_task(service_dir: str):
+    configs = []
+    for file in scandir(service_dir):
+        if file.name.endswith(".yml") or file.name.endswith(".yaml"):
+            configs.append(parse_yaml(path.join(service_dir, file.name)))
+    if configs:
+        messages = {}
+        for obj in configs:
             messages[obj.service_name] = {"build_logs": "", "run_logs": ""}
             message = build_docker_instance.send_with_options(
                 kwargs=obj.__dict__,
