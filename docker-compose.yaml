@@ -5,6 +5,15 @@ services:
     build:
       context: .
       dockerfile: deploy/docker/Dockerfile.rest
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    env_file:
+      - .env
+    ports:
+      - "9090:9090"
+    depends_on:
+      - redis
+      - rabbitmq
 
   rabbitmq:
     image: rabbitmq:3.10.0-rc.3-management-alpine
@@ -14,6 +23,8 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
+    depends_on:
+      - redis
 
   redis:
     image: redis:6.2.6-alpine

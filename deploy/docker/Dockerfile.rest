@@ -1,0 +1,32 @@
+FROM ubuntu:18.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# unicorn envs
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+# installing dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3.8 \
+    python3-pip python-dev build-essential \
+    libssl-dev libffi-dev python3-dev \
+    supervisor docker.io python-pip python
+
+# supervisord logs
+RUN mkdir -p /var/log/supervisor
+
+# app folder
+RUN mkdir /app
+COPY . /app
+WORKDIR /app
+
+# installing all from requirements
+RUN python3 -m pip install -U pip
+RUN python3 -m pip install -U setuptools
+RUN pip3 install -r /app/deploy/requirements.txt
+
+# moving conf
+RUN mv /app/deploy/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

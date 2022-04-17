@@ -20,7 +20,7 @@ app.include_router(dramatiq_router)
 @app.on_event("startup")
 async def start_app():
     dramatiq_router.custom_messages = create_tasks()
-    if environ.get("DEBUG", True):
+    if environ.get("DEBUG", True) == 'True':
         print(f"[+] Docker router got messages: {dramatiq_router.custom_messages}")
         docker_router.abs_path = "/Users/d.saschenko/PycharmProjects/diplomSiem/internal/Services"
     else:
@@ -57,5 +57,5 @@ async def test():
 
 
 if __name__ == '__main__':
-    if environ.get("DEBUG", True):
+    if environ.get("DEBUG", True) == 'True':
         uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8081)
