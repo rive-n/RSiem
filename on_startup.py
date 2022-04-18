@@ -3,6 +3,8 @@ from tasks_logic.docker_tasks import print_error, print_result, \
     run_docker_instance, build_docker_instance, redis_backend
 from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
+from typing import Optional
+from pydantic import ValidationError, validator
 import yaml
 import io
 
@@ -29,6 +31,15 @@ class ParsedYaml(BaseModel):
     service_port: int
     dockerfile: str
     full_path: str
+    proxy_servername: Optional[str]
+    proxy_path: Optional[str]
+
+    @validator("proxy_path")
+    def validate_proxy_path_field(cls, v, values):
+        if values.get("proxy_servername"):
+            if not any(letter in v for letter in ["..", "\0", "\n", "\t"]):
+                return v
+        raise ValidationError("Proxy server name is not set or bad chars in proxy path")
 
 
 class UpdatedYamlData(ParsedYaml, metaclass=YamlMeta):
