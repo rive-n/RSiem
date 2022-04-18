@@ -11,10 +11,12 @@ from on_startup import create_tasks
 from internal.Enums import StatusCodes
 from routers.docker.docker_router import router as docker_router
 from routers.queue.dramatiq_router import router as dramatiq_router
+from routers.proxy.proxy_router import router as proxy_router
 
 app = FastAPI()
 app.include_router(docker_router)
 app.include_router(dramatiq_router)
+app.include_router(proxy_router)
 
 
 @app.on_event("startup")
