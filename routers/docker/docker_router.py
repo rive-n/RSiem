@@ -38,7 +38,8 @@ async def get_docker_info_by_id(container_id: str, logs: bool = True):
 
 @router.api_route("/create_service/{service_name}", methods=['POST'])
 async def create_new_docker_container(files: List[UploadFile], service_name):
-    if service_name not in listdir(router.abs_path):
+    print("here:" , service_name)
+    if service_name.lower() not in map(lambda name: name.lower(), listdir(router.abs_path)):
         mkdir(path.join(router.abs_path, service_name))
     abc_path = path.join(router.abs_path, service_name)
     for file in files:
