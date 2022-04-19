@@ -3,8 +3,8 @@ from tasks_logic.docker_tasks import print_error, print_result, \
     run_docker_instance, build_docker_instance, redis_backend
 from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
-from typing import Optional
 from pydantic import ValidationError, validator
+from typing import Optional
 import yaml
 import io
 
@@ -31,33 +31,44 @@ class ParsedYaml(BaseModel):
     service_port: int
     dockerfile: str
     full_path: str
-    proxy_servername: Optional[str]
+
+    @validator("service_name")
+    def validate_service_name_field(cls, v):
+        return v.lower()
+
+
+class ParsedYamlProxy(ParsedYaml):
+    proxy_servername: str
     proxy_path: Optional[str]
 
     @validator("proxy_path")
-    def validate_proxy_path_field(cls, v, values):
-        if values.get("proxy_servername"):
-            if not any(letter in v for letter in ["..", "\0", "\n", "\t"]):
-                return v
-        raise ValidationError("Proxy server name is not set or bad chars in proxy path")
+    def validate_proxy_path_field(cls, v):
+        if any(letter in v for letter in ["..", "\0", "\n", "\t"]):
+            raise ValidationError("Bad chars in proxy path")
+        return v
 
 
 class UpdatedYamlData(ParsedYaml, metaclass=YamlMeta):
     pass
 
 
-def parse_yaml(full_path: str) -> UpdatedYamlData:
+class UpdatedParsedDataProxy(ParsedYamlProxy, metaclass=YamlMeta):
+    pass
+
+
+def parse_yaml(full_path: str, proxy: bool = False) -> UpdatedYamlData:
     if path.isfile(full_path):
-        try:
-            with io.open(full_path) as stream:
+        with io.open(full_path) as stream:
+            try:
                 file_data = yaml.safe_load(stream)
+                print("data:", file_data)
                 if file_data.get("service"):
                     file_data["service"]["full_path"] = path.dirname(path.abspath(full_path))
-                    return UpdatedYamlData(**file_data["service"])
+                    return UpdatedYamlData(**file_data["service"]) if not \
+                        proxy else UpdatedParsedDataProxy(**file_data["service"])
                 raise
-        except Exception as e:
-            print(f"Exception acquired: {e.args}")
-            exit(-1)
+            except Exception as e:
+                print("Fucking what:", e)
 
 
 def create_tasks():
@@ -76,6 +87,7 @@ def create_tasks():
         messages = {}
         for obj in objects:
             messages[obj.service_name] = {"build_logs": "", "run_logs": ""}
+            print("Path:", obj.full_path)
             message = build_docker_instance.send_with_options(
                 kwargs=obj.__dict__,
                 on_failure=print_error,
@@ -102,6 +114,7 @@ def create_specific_task(service_dir: str):
         messages = {}
         for obj in configs:
             messages[obj.service_name] = {"build_logs": "", "run_logs": ""}
+            print("Path:", obj.full_path)
             message = build_docker_instance.send_with_options(
                 kwargs=obj.__dict__,
                 on_failure=print_error,
