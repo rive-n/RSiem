@@ -44,7 +44,7 @@ async def test():
 <p>Try selecting more than one file when browsing for files.</p>
 
 <!-- make sure the attribute enctype is set to multipart/form-data -->
-<form method="post" enctype="multipart/form-data" action="/docker/create_service/rivenService">
+<form method="post" enctype="multipart/form-data" action="/docker/create_service/testRiven">
     <p>
         <label>Add files (multiple): </label><br/>
         <input type="file" name="files" multiple="multiple"/>
