@@ -23,7 +23,6 @@ async def get_info_about_startup():
             else:
                 messages.update({service_dockerfile: {logs_type: run_docker_instance.message().copy(
                     message_id=router.custom_messages[service_dockerfile][logs_type])}})
-            print(router.custom_messages[service_dockerfile][logs_type])
             try:
                 message = messages[service_dockerfile][logs_type].get_result()
             except ResultMissing:
@@ -35,16 +34,16 @@ async def get_info_about_startup():
 class LogType(str, enum.Enum):
     build_logs = "build_docker_instance"
     run_logs = "run_docker_instance"
+    stop_logs = 'stop_docker_instance'
 
 
 @router.api_route("/get_task_info/{task_id}")
 async def get_task_info(task_id: UUID, log_type: LogType):
     try:
-        if log_type == LogType.build_logs or log_type == LogType.run_logs:
-            func = getattr(tasks_logic.docker_tasks, log_type)
-            message = func.message().copy(message_id=task_id)
-            message = message.get_result()
-            error = False
+        func = getattr(tasks_logic.docker_tasks, log_type)
+        message = func.message().copy(message_id=task_id)
+        message = message.get_result()
+        error = False
     except ResultMissing:
         message = "Result is missing"
         error = True

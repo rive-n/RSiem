@@ -18,6 +18,7 @@ async def get_docker_client():
 
 
 async def return_props(service_name: str, request: Request):
+    # TODO: refactor + add utils.py
     if any(service in service_name.strip().lower() for service in
            ["postgres", "rabbitmq", "ampq", "api-backend", "redis"]):
         raise HTTPException(status_code=401, detail="No permissions")
@@ -42,7 +43,7 @@ async def return_props(service_name: str, request: Request):
         connector = TCPConnector(verify_ssl=False, use_dns_cache=False, keepalive_timeout=5)
         async with ClientSession(connector=connector) as rq:
             headers, body = request.headers, (await request.body()).decode()
-            async with rq.get(f"http://{parsed_data.proxy_servername}:{parsed_data.service_port}/{parsed_data.proxy_path}",
+            async with rq.get(f"http://{parsed_data.proxy_servername}:{parsed_data.service_port}{parsed_data.proxy_path}",
                               headers=headers, json=body) as response:
                 if 199 < response.status < 400:
                     debug_info = {}
