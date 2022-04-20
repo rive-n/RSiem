@@ -123,3 +123,8 @@ async def start_service_byName(service_name: str):
             return {"status": StatusCodes.OK, "message": StatusCodes(200).value, "data": messages}
     raise HTTPException(status_code=400, detail="service not found")
 
+
+@router.api_route("/service_logs/{service_name}")
+async def service_get_logs(container: dict = Depends(check_container_by_serviceName)):
+    container_logs = container[0].logs()
+    return {"status": StatusCodes.OK, "message": StatusCodes(200).value, "data": container_logs}
