@@ -64,6 +64,18 @@ def run_docker_instance(*args, **kwargs):  # args - dramatiq bypass
     return output
 
 
+@dramatiq.actor(store_results=True)
+def stop_docker_instance(*args, **kwargs):
+    output = ""
+    try:
+        command = ["docker", "stop", kwargs["container_id"]]
+        output += subprocess.check_output(command, stderr=subprocess.STDOUT).decode()
+        output += f"Container {kwargs['container_id']}/{kwargs['container_name']} stopped"
+    except Exception as e:
+        output += e
+    return output
+
+
 if __name__ == '__main__':
     print(build_docker_instance(full_path="/Users/d.saschenko/PycharmProjects/diplomSiem/internal/Services/testRiven",
                                 dockerfile="Dockerfile", service_name="flaskapp"))
