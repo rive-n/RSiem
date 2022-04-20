@@ -114,7 +114,6 @@ def create_specific_task(service_dir: str):
         messages = {}
         for obj in configs:
             messages[obj.service_name] = {"build_logs": "", "run_logs": ""}
-            print("Path:", obj.full_path)
             message = build_docker_instance.send_with_options(
                 kwargs=obj.__dict__,
                 on_failure=print_error,
