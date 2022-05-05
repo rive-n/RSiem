@@ -5,11 +5,13 @@ from internal.Enums import StatusCodes
 from dramatiq.results import ResultMissing
 from tasks_logic.docker_tasks import run_docker_instance, build_docker_instance
 import tasks_logic.docker_tasks
+from on_startup import create_tasks
 
 router = APIRouter(
     prefix="/dramatiq",
     tags=["dramatiq", "broker"]
 )
+router.custom_messages = create_tasks()
 
 
 @router.api_route("/on_startup")

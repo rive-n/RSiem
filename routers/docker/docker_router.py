@@ -15,6 +15,7 @@ router = APIRouter(
     tags=["docker"],
 )
 router.client = docker.from_env()
+router.abs_path = environ.get("ROOT_PATH")
 
 
 class Command(BaseModel):

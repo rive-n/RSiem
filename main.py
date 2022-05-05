@@ -1,12 +1,9 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from ujson import loads, dumps
 from typing import Dict
 import uvicorn
 
 from os import environ
-from uuid import uuid5
-from on_startup import create_tasks
 from on_startup_grafana import create_datasource_request, create_and_configure_dashboard
 
 from internal.Enums import StatusCodes
@@ -24,12 +21,6 @@ app.include_router(proxy_router)
 async def start_app():
     create_datasource_request()
     create_and_configure_dashboard()
-    dramatiq_router.custom_messages = create_tasks()
-    if environ.get("DEBUG") == 'true':
-        print(f"[+] Docker router got messages: {dramatiq_router.custom_messages}")
-        docker_router.abs_path = "/Users/d.saschenko/PycharmProjects/diplomSiem/internal/Services"
-    else:
-        docker_router.abs_path = environ.get("ROOT_PATH")
 
 
 @app.api_route("/health", methods=["GET"])
