@@ -16,6 +16,14 @@
 4. Grafana - собирает все необходимые логи с PostreSQL
 5. PostreSQL - хранение логов
 
+## Стек
+
+- dramatiq - замена Celery. Работает как подпроцесс supervisord
+- docker/python docker sdk - удобная библиотека для работы с docker socket HTTP API
+- grafana client - подобие docker sdk, не очень удобная библиотека для работы с grafana HTTP API
+- fastapi - асинхронный фреймворк для обработки запросов
+- uvicorn - веб сервер для fastapi, ускоряем работу сервиса по максимуму
+
 ## Deploy
 
 1. Необходимо создать .env файл для дальнейшего запуска в docker-compose, содержащий в себе значения:
