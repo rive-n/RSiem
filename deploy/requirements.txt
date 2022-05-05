@@ -34,3 +34,5 @@ attrs==21.4.0
 frozenlist
 multidict
 yarl
+grafana-client==2.2.0
+prometheus-client==0.14.1

@@ -11,7 +11,7 @@ import pika
 
 creds = pika.PlainCredentials(environ.get("BROKER_USERNAME", "Riven"),
                               environ.get("BROKER_PASSWORD", "testpassword"))
-if environ.get("DEBUG", True) == 'True':
+if environ.get("DEBUG") == 'true':
     # local testing env #
     rabbitmq_broker = RabbitmqBroker(host="127.0.0.1", credentials=creds)
     redis_backend = RedisBackend(host="127.0.0.1")

@@ -47,7 +47,7 @@ async def return_props(service_name: str, request: Request):
                               headers=headers, json=body) as response:
                 if 199 < response.status < 400:
                     debug_info = {}
-                    if environ.get("DEBUG"):
+                    if environ.get("DEBUG") == 'true':
                         debug_info["response_data"] = await response.text()
                     return {"status": StatusCodes.OK, "message": StatusCodes(200).value, **debug_info}
 

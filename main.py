@@ -7,6 +7,7 @@ import uvicorn
 from os import environ
 from uuid import uuid5
 from on_startup import create_tasks
+from on_startup_grafana import create_datasource_request, create_and_configure_dashboard
 
 from internal.Enums import StatusCodes
 from routers.docker.docker_router import router as docker_router
@@ -21,8 +22,10 @@ app.include_router(proxy_router)
 
 @app.on_event("startup")
 async def start_app():
+    create_datasource_request()
+    create_and_configure_dashboard()
     dramatiq_router.custom_messages = create_tasks()
-    if environ.get("DEBUG", True) == 'True':
+    if environ.get("DEBUG") == 'true':
         print(f"[+] Docker router got messages: {dramatiq_router.custom_messages}")
         docker_router.abs_path = "/Users/d.saschenko/PycharmProjects/diplomSiem/internal/Services"
     else:
@@ -59,5 +62,5 @@ async def test():
 
 
 if __name__ == '__main__':
-    if environ.get("DEBUG", True) == 'True':
+    if environ.get("DEBUG") == 'true':
         uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8081)
