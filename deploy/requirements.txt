@@ -36,3 +36,4 @@ multidict
 yarl
 grafana-client==2.2.0
 prometheus-client==0.14.1
+asyncpg==0.25.0
