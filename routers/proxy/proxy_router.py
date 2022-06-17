@@ -7,6 +7,8 @@ from on_startup import parse_yaml
 from pydantic import ValidationError
 from internal.Enums import StatusCodes
 
+import asyncpg
+
 router = APIRouter(
     prefix="/proxy",
     tags=["proxy", "forward"]
@@ -40,11 +42,13 @@ async def return_props(service_name: str, request: Request):
         # That's mean that user specified servername but proxy_path contain bad letters
         raise HTTPException(status_code=406, detail="Bad characters in proxy_path, or proxy_servername not specified")
     else:
-        connector = TCPConnector(verify_ssl=False, use_dns_cache=False, keepalive_timeout=5)
-        async with ClientSession(connector=connector) as rq:
+        # connector = TCPConnector(verify_ssl=False, use_dns_cache=False, keepalive_timeout=5)
+        # async with ClientSession(connector=connector) as rq:
+        async with ClientSession() as rq:
             headers, body = request.headers, (await request.body()).decode()
-            async with rq.get(f"http://{parsed_data.proxy_servername}:{parsed_data.service_port}{parsed_data.proxy_path}",
-                              headers=headers, json=body) as response:
+            async with rq.get(
+                    f"http://{parsed_data.proxy_servername}:{parsed_data.service_port}{parsed_data.proxy_path}",
+                    json=body) as response:
                 if 199 < response.status < 400:
                     debug_info = {}
                     if environ.get("DEBUG") == 'true':
@@ -55,3 +59,28 @@ async def return_props(service_name: str, request: Request):
 @router.api_route("/sendto/{service_name:str}")
 async def proxy_request(kwarg_path: dict = Depends(return_props)) -> dict:
     return kwarg_path
+
+
+# {database: {database_name: {table_name: {col_1:[data], col_2:[data]}}}}
+# TODO: make aio connection
+async def json_parse(nasty_json: dict):
+    first_key_obj = lambda obj: obj[list(obj.keys())[0]]
+    if nasty_json.get('database'):
+        database: dict = nasty_json['database']
+        if len(database.keys()) == 1:
+            database_name: dict = first_key_obj(database)
+            if len(database_name.keys()) == 1:
+                table_name: dict = first_key_obj(database_name)
+                for col_name, col_values in table_name.items():
+                    print(col_values, col_name)
+
+
+@router.api_route("/database", methods=['POST'])
+async def save_to_database(request: Request,
+                           nasty_json: dict = {"database": {"database_name": {"table_name": {"col_1": [1, 2]}}}}):
+    # TODO: split to utils
+    if not request.headers.get('Content-type') and request.headers[
+        'Content-type'] != 'application/json' or nasty_json is None:
+        return HTTPException(status_code=400,
+                             detail=f"Bad content type, use application/json instead of {request.headers['Content-type']}")
+    await json_parse(nasty_json)
