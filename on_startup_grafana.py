@@ -3,8 +3,9 @@ from grafana_client.client import GrafanaClientError
 from os import environ, path
 from functools import lru_cache
 from ujson import load
+from uuid import uuid4
 
-if environ.get('DEBUG') == 'true':
+if environ.get('DEBUG') == 'True':
     creds = ("Riven", "Riven")
     host = "localhost:3000"
 else:
@@ -25,7 +26,7 @@ def create_datasource_request():
     # - PSQL_PASSWORD
     # - DEBUG
 
-    if environ.get("DEBUG") == "true":
+    if environ.get("DEBUG") == "True":
         psql_host, psql_username, psql_password = "localhost:5432", "grafana", "grafana"
     else:
         psql_host, psql_username, psql_password = "postgres:5432", environ.get('PSQL_USERNAME'), \
@@ -68,11 +69,12 @@ def create_and_configure_dashboard(dash_name: bool = None):
         dashboard_config = load(stream)
 
     if dash_name:
-        dashboard_config['dashboard']['title'] += 'CP'
+        dashboard_config['dashboard']['title'] += str(uuid4)
     try:
         client.client.POST('/dashboards/db/', dashboard_config)
     except GrafanaClientError as e:
-        print("Seems like this dashboard already exists, creating copy with CP on end")
+        # UUID instead of "CP" because of recursive error #
+        print("Seems like this dashboard already exists, creating copy with UUID on end")
         create_and_configure_dashboard(True)
 
 
